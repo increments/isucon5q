@@ -67,12 +67,11 @@ class Isucon5::WebApp < Sinatra::Base
     end
 
     def authenticate(email, password)
-      query = <<SQL
-SELECT u.id AS id, u.account_name AS account_name, u.nick_name AS nick_name, u.email AS email
-FROM users u
-JOIN salts s ON u.id = s.user_id
-WHERE u.email = ? AND u.passhash = SHA2(CONCAT(?, s.salt), 512)
-SQL
+      query = <<-SQL
+        SELECT id
+        FROM users
+        WHERE email = ? AND passhash = SHA2(CONCAT(?, salt), 512)
+      SQL
       result = db.xquery(query, email, password).first
       unless result
         raise Isucon5::AuthenticationError
@@ -189,8 +188,6 @@ SQL
   get '/' do
     authenticated!
 
-    profile = db.xquery('SELECT * FROM profiles WHERE user_id = ?', current_user[:id]).first
-
     entries_query = 'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
     entries = db.xquery(entries_query, current_user[:id])
       .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
@@ -249,7 +246,6 @@ SQL
     footprints = db.query(footprints_sql)
 
     locals = {
-      profile: profile || {},
       entries: entries,
       comments_for_me: comments_for_me,
       entries_of_friends: entries_of_friends,
@@ -263,8 +259,6 @@ SQL
   get '/profile/:account_name' do
     authenticated!
     owner = user_from_account(params['account_name'])
-    prof = db.xquery('SELECT * FROM profiles WHERE user_id = ?', owner[:id]).first
-    prof = {} unless prof
     query = if permitted?(owner[:id])
               'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
             else
@@ -273,7 +267,7 @@ SQL
     entries = db.xquery(query, owner[:id])
       .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
     mark_footprint(owner[:id])
-    erb :profile, locals: { owner: owner, profile: prof, entries: entries, private: permitted?(owner[:id]) }
+    erb :profile, locals: { owner: owner, entries: entries, private: permitted?(owner[:id]) }
   end
 
   post '/profile/:account_name' do
@@ -281,23 +275,21 @@ SQL
     if params['account_name'] != current_user[:account_name]
       raise Isucon5::PermissionDenied
     end
-    args = [params['first_name'], params['last_name'], params['sex'], params['birthday'], params['pref']]
 
-    prof = db.xquery('SELECT * FROM profiles WHERE user_id = ?', current_user[:id]).first
-    if prof
-      query = <<SQL
-UPDATE profiles
-SET first_name=?, last_name=?, sex=?, birthday=?, pref=?, updated_at=CURRENT_TIMESTAMP()
-WHERE user_id = ?
-SQL
-      args << current_user[:id]
-    else
-      query = <<SQL
-INSERT INTO profiles (user_id,first_name,last_name,sex,birthday,pref) VALUES (?,?,?,?,?,?)
-SQL
-      args.unshift(current_user[:id])
-    end
-    db.xquery(query, *args)
+    query = <<-SQL
+      UPDATE users
+      SET first_name=?, last_name=?, sex=?, birthday=?, pref=?, updated_at=CURRENT_TIMESTAMP()
+      WHERE id = ?
+    SQL
+    db.xquery(
+      query,
+      params['first_name'],
+      params['last_name'],
+      params['sex'],
+      params['birthday'],
+      params['pref'],
+      current_user[:id]
+    )
     redirect "/profile/#{params['account_name']}"
   end
 

@@ -5,12 +5,12 @@
     <% if private %>
     <dt>メールアドレス</dt><dd id="prof-email"><%= owner[:email] %></dd>
     <% end %>
-    <dt>姓</dt><dd id="prof-last-name"><%= profile[:last_name] || '未入力' %></dd>
-    <dt>名</dt><dd id="prof-first-name"><%= profile[:first_name] || '未入力' %></dd>
+    <dt>姓</dt><dd id="prof-last-name"><%= owner[:last_name] || '未入力' %></dd>
+    <dt>名</dt><dd id="prof-first-name"><%= owner[:first_name] || '未入力' %></dd>
     <% if private %>
-    <dt>性別</dt><dd id="prof-sex"><%= profile[:sex] || '未入力' %></dd>
-    <dt>誕生日</dt><dd id="prof-birthday"><%= profile[:birthday] || '未入力' %></dd>
-    <dt>住んでいる県</dt><dd id="prof-pref"><%= profile[:pref] || '未入力' %></dd>
+    <dt>性別</dt><dd id="prof-sex"><%= owner[:sex] || '未入力' %></dd>
+    <dt>誕生日</dt><dd id="prof-birthday"><%= owner[:birthday] || '未入力' %></dd>
+    <dt>住んでいる県</dt><dd id="prof-pref"><%= owner[:pref] || '未入力' %></dd>
     <% end %>
   </dl>
 </div>
@@ -36,24 +36,24 @@
 <h2>プロフィール更新</h2>
 <div id="profile-post-form">
   <form method="POST" action="/profile/<%= current_user[:account_name] %>">
-    <div>名字: <input type="text" name="last_name" placeholder="みょうじ" value="<%= profile[:last_name] %>" /></div>
-    <div>名前: <input type="text" name="first_name" placeholder="なまえ" value="<%= profile[:first_name] %>" /></div>
+    <div>名字: <input type="text" name="last_name" placeholder="みょうじ" value="<%= owner[:last_name] %>" /></div>
+    <div>名前: <input type="text" name="first_name" placeholder="なまえ" value="<%= owner[:first_name] %>" /></div>
     <div>性別:
       <select name="sex">
         <option>未指定</option>
-        <option <%= profile[:sex] == "男性" ? 'selected' : '' %>>男性</option>
-        <option <%= profile[:sex] == "女性" ? 'selected' : '' %>>女性</option>
-        <option <%= profile[:sex] == "その他" ? 'selected' : '' %>>その他</option>
+        <option <%= owner[:sex] == "男性" ? 'selected' : '' %>>男性</option>
+        <option <%= owner[:sex] == "女性" ? 'selected' : '' %>>女性</option>
+        <option <%= owner[:sex] == "その他" ? 'selected' : '' %>>その他</option>
       </select>
     </div>
     <div>誕生日:
-      <input type="date" name="birthday" min="1915-01-01" max="2014-12-31" value="<%= profile[:birthday] ? profile[:birthday].strftime('%Y-%m-%d') : "2000-01-01" %>" />
+      <input type="date" name="birthday" min="1915-01-01" max="2014-12-31" value="<%= owner[:birthday] ? owner[:birthday].strftime('%Y-%m-%d') : "2000-01-01" %>" />
     </div>
     <div>住んでいる県:
       <select name="pref">
         <% prefectures.each do |pref| %>
-        <option <%= profile[:pref] == pref ? 'selected' : ''  %>><%= pref %></option>
-          <% end %>
+          <option <%= owner[:pref] == pref ? 'selected' : ''  %>><%= pref %></option>
+        <% end %>
       </select>
     </div>
     <div><input type="submit" value="更新" /></div>
