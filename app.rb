@@ -218,7 +218,7 @@ class Isucon5::WebApp < Sinatra::Base
     friend_ids_str = "(#{friends_hash.keys.join(',')})"
 
     entries_of_friends_sql = <<-SQL
-      select *
+      select id, user_id, body, created_at
       from entries
       where user_id in #{friend_ids_str}
       order by created_at desc
