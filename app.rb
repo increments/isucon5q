@@ -28,7 +28,9 @@ class Isucon5::WebApp < Sinatra::Base
   error_log.sync = true
   before { env["rack.errors"] =  error_log }
 
-  use Rack::Lineprof, profile: 'app.rb' if ENV['PROFILE']
+  if ENV['PROFILE']
+    use Rack::Lineprof, profile: 'app.rb', logger: ::Logger.new(__dir__ + '/log/lineprof.log')
+  end
 
   set :erb, escape_html: true
   set :public_folder, File.expand_path('../../static', __FILE__)
