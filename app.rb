@@ -259,8 +259,6 @@ SQL
   get '/profile/:account_name' do
     authenticated!
     owner = user_from_account(params['account_name'])
-    prof = db.xquery('SELECT * FROM profiles WHERE user_id = ?', owner[:id]).first
-    prof = {} unless prof
     query = if permitted?(owner[:id])
               'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
             else
@@ -269,7 +267,7 @@ SQL
     entries = db.xquery(query, owner[:id])
       .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
     mark_footprint(owner[:id])
-    erb :profile, locals: { owner: owner, profile: prof, entries: entries, private: permitted?(owner[:id]) }
+    erb :profile, locals: { owner: owner, entries: entries, private: permitted?(owner[:id]) }
   end
 
   post '/profile/:account_name' do
