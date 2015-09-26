@@ -179,13 +179,18 @@ class Isucon5::WebApp < Sinatra::Base
     entries = db.xquery(entries_query, current_user[:id])
       .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
 
-    comments_for_me_query = <<SQL
-SELECT id, entry_id, user_id, comment, created_at
-FROM comments
-WHERE entry_user_id = ?
-ORDER BY created_at DESC
-LIMIT 10
-SQL
+    comments_for_me_query = <<-SQL
+      SELECT
+        users.account_name as account_name,
+        users.nick_name as nick_name,
+        comments.comment as comment,
+        comments.created_at as created_at
+      FROM comments, users
+      WHERE entry_user_id = ?
+      and comments.user_id = users.id
+      ORDER BY comments.created_at DESC
+      LIMIT 10
+    SQL
     comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
 
     friend_ids =
