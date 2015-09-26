@@ -1,3 +1,12 @@
+GIT
+  remote: git://github.com/kainosnoema/rack-lineprof.git
+  revision: 33be9c3e597bd6e4c664486e272483baf60af720
+  specs:
+    rack-lineprof (0.0.3)
+      rack (~> 1.5)
+      rblineprof (~> 0.3.6)
+      term-ansicolor (~> 1.3)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -8,10 +17,6 @@ GEM
     mysql2-cs-bind (0.0.6)
       mysql2
     rack (1.6.4)
-    rack-lineprof (0.0.3)
-      rack (~> 1.5)
-      rblineprof (~> 0.3.6)
-      term-ansicolor (~> 1.3)
     rack-protection (1.5.3)
       rack
     raindrops (0.15.0)
@@ -37,7 +42,7 @@ DEPENDENCIES
   erubis
   mysql2
   mysql2-cs-bind
-  rack-lineprof
+  rack-lineprof!
   sinatra
   unicorn
 
