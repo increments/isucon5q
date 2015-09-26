@@ -235,15 +235,26 @@ class Isucon5::WebApp < Sinatra::Base
         comments.comment as comment,
         comments.user_id as user_id,
         comments.created_at as created_at,
-        users.nick_name as nick_name,
-        users.account_name as account_name
-      from comments, users
+        comments.entry_user_id as entry_user_id
+      from comments
       where user_id in #{friend_ids_str}
-      and entry_user_id = users.id
       order by comments.created_at desc
       limit 10
     SQL
     comments_of_friends = db.query(comments_of_friends_sql)
+
+    entry_owner_ids = comments_of_friends.map do |record|
+      record[:entry_user_id]
+    end.join(',')
+    entry_owners_sql =<<-SQL
+      select id, account_name, nick_name
+      from users
+      where id in (#{entry_owner_ids})
+    SQL
+    entry_owners_hash = {}
+    db.query(entry_owners_sql).each do |record|
+      entry_owners_hash[record[:id]] = record
+    end
 
     footprints_sql = <<-SQL
       SELECT users.account_name as account_name, users.nick_name as nick_name, new_footprints.created_at as created_at
@@ -263,6 +274,7 @@ class Isucon5::WebApp < Sinatra::Base
       entries: entries,
       comments_for_me: comments_for_me,
       entries_of_friends: entries_of_friends,
+      entry_owners_hash: entry_owners_hash,
       comments_of_friends: comments_of_friends,
       friends_count: friends_count,
       friends_hash: friends_hash,
