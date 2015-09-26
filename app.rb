@@ -193,14 +193,29 @@ class Isucon5::WebApp < Sinatra::Base
     SQL
     comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
 
-    friend_ids =
-      db.query("select another as friend_id from relations where one = #{current_user[:id]}").to_a
-    friend_ids +=
-      db.query("select one as friend_id from relations where another = #{current_user[:id]}").to_a
-    friends_count = friend_ids.size
+    friends_hash = {}
+    another_frields_sql =<<-SQL
+      select users.*
+      from relations, users
+      where one = #{current_user[:id]}
+      and another = users.id
+    SQL
+    db.query(another_frields_sql).each do |record|
+      friends_hash[record[:id]] = record
+    end
+    one_frields_sql =<<-SQL
+      select users.*
+      from relations, users
+      where another = #{current_user[:id]}
+      and one = users.id
+    SQL
+    db.query(one_frields_sql).each do |record|
+      friends_hash[record[:id]] = record
+    end
+    friends_count = friends_hash.size
 
     # (1, 2, 3)
-    friend_ids_str = "(#{friend_ids.map{ |r| r[:friend_id] }.join(',')})"
+    friend_ids_str = "(#{friends_hash.keys.join(',')})"
 
     entries_of_friends_sql = <<-SQL
       select *
@@ -243,6 +258,7 @@ class Isucon5::WebApp < Sinatra::Base
       entries_of_friends: entries_of_friends,
       comments_of_friends: comments_of_friends,
       friends_count: friends_count,
+      friends_hash: friends_hash,
       footprints: footprints
     }
     erb :index, locals: locals
