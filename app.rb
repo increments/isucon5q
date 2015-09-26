@@ -45,7 +45,7 @@ class Isucon5::WebApp < Sinatra::Base
   set :protection, true
 
   before do
-    QueryLogger.logger << '=' * 80 + "\n"
+    QueryLogger.logger << "#{request.request_method} #{request.path_info} " + '=' * 30 + "\n"
   end
 
   helpers do
