@@ -3,7 +3,6 @@ require 'mysql2'
 require 'mysql2-cs-bind'
 require 'tilt/erubis'
 require 'erubis'
-require 'rack-lineprof' if ENV['PROFILE']
 
 module Isucon5
   class AuthenticationError < StandardError; end
@@ -19,18 +18,6 @@ end
 
 class Isucon5::WebApp < Sinatra::Base
   use Rack::Session::Cookie
-
-  access_log = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
-  access_log.sync = true
-  use Rack::CommonLogger, access_log
-
-  error_log = File.new("#{settings.root}/log/error-#{settings.environment}.log", 'a+')
-  error_log.sync = true
-  before { env["rack.errors"] =  error_log }
-
-  if ENV['PROFILE']
-    use Rack::Lineprof, profile: 'app.rb', logger: ::Logger.new(__dir__ + '/log/lineprof.log')
-  end
 
   set :erb, escape_html: true
   set :public_folder, File.expand_path('../../static', __FILE__)
