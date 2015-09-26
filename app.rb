@@ -379,7 +379,10 @@ SQL
       unless user
         raise Isucon5::ContentNotFound
       end
-      db.xquery('INSERT INTO relations (one, another) VALUES (?,?), (?,?)', current_user[:id], user[:id], user[:id], current_user[:id])
+      user_id = current_user[:id]
+      another_id = user[:id]
+      one, another = user_id < another_id ? [another_id, user_id] : [user_id, another_id]
+      db.query("INSERT INTO relations (one, another) VALUES (#{one},#{another})")
       redirect '/friends'
     end
   end
