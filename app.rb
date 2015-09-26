@@ -127,9 +127,20 @@ SQL
     end
 
     def mark_footprint(user_id)
-      if user_id != current_user[:id]
-        query = 'INSERT INTO footprints (user_id,owner_id) VALUES (?,?)'
-        db.xquery(query, user_id, current_user[:id])
+      return if user_id == current_user[:id]
+
+      check_sql = <<-SQL
+        select 1
+        from new_footprints
+        where user_id = #{user_id}
+        and owner_id = #{current_user[:id]}
+        and date(created_at) = date(now())
+        limit 1
+      SQL
+      if db.query(check_sql).first
+        db.query("update new_footprints set created_at = now() where user_id = #{user_id} and owner_id = #{current_user[:id]}")
+      else
+        db.query("INSERT INTO new_footprints (user_id,owner_id) VALUES (#{user_id},#{current_user[:id]})")
       end
     end
 
@@ -183,10 +194,11 @@ SQL
       .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
 
     comments_for_me_query = <<SQL
-SELECT id, entry_id, user_id, comment, created_at
-FROM comments
-WHERE entry_user_id = ?
-ORDER BY created_at DESC
+SELECT c.id AS id, c.entry_id AS entry_id, c.user_id AS user_id, c.comment AS comment, c.created_at AS created_at
+FROM comments c
+JOIN entries e ON c.entry_id = e.id
+WHERE e.user_id = ?
+ORDER BY c.created_at DESC
 LIMIT 10
 SQL
     comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
@@ -221,15 +233,19 @@ SQL
     SQL
     comments_of_friends = db.query(comments_of_friends_sql)
 
-    query = <<SQL
-SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) AS updated
-FROM footprints
-WHERE user_id = ?
-GROUP BY user_id, owner_id, DATE(created_at)
-ORDER BY updated DESC
-LIMIT 10
-SQL
-    footprints = db.xquery(query, current_user[:id])
+    footprints_sql = <<-SQL
+      SELECT users.account_name as account_name, users.nick_name as nick_name, new_footprints.created_at as created_at
+      FROM
+        new_footprints,
+        users
+      WHERE
+        user_id = #{current_user[:id]}
+      AND
+        users.id = owner_id
+      ORDER BY new_footprints.created_at DESC
+      LIMIT 10
+    SQL
+    footprints = db.query(footprints_sql)
 
     locals = {
       profile: profile || {},
@@ -331,28 +347,31 @@ SQL
     if entry[:is_private] && !permitted?(entry[:user_id])
       raise Isucon5::PermissionDenied
     end
-    query = 'INSERT INTO comments (entry_id, user_id, comment, entry_user_id) VALUES (?,?,?,?)'
-    db.xquery(query, entry[:id], current_user[:id], params['comment'], entry[:user_id])
+    query = 'INSERT INTO comments (entry_id, user_id, comment) VALUES (?,?,?)'
+    db.xquery(query, entry[:id], current_user[:id], params['comment'])
     redirect "/diary/entry/#{entry[:id]}"
   end
 
   get '/footprints' do
     authenticated!
-    query = <<SQL
-SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) as updated
-FROM footprints
-WHERE user_id = ?
-GROUP BY user_id, owner_id, DATE(created_at)
-ORDER BY updated DESC
-LIMIT 50
-SQL
-    footprints = db.xquery(query, current_user[:id])
+    footprints_sql = <<-SQL
+      SELECT users.account_name as account_name, users.nick_name as nick_name, new_footprints.created_at as created_at
+      FROM
+        new_footprints,
+        users
+      WHERE
+        user_id = #{current_user[:id]}
+      AND
+        users.id = owner_id
+      ORDER BY new_footprints.created_at DESC
+      LIMIT 10
+    SQL
+    footprints = db.query(footprints_sql)
     erb :footprints, locals: { footprints: footprints }
   end
 
   get '/friends' do
     authenticated!
-
 
     friends = db.query("select another as user_id, created_at from relations where one = #{current_user[:id]}").map do |record|
       [record[:user_id], record[:created_at]]
@@ -388,7 +407,7 @@ SQL
 
   get '/initialize' do
     db.query("DELETE FROM relations WHERE id > 500000")
-    db.query("DELETE FROM footprints WHERE id > 500000")
+    db.query("DELETE FROM new_footprints WHERE id > 500000")
     db.query("DELETE FROM entries WHERE id > 500000")
     db.query("DELETE FROM comments WHERE id > 1500000")
   end
