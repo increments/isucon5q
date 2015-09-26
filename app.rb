@@ -62,6 +62,25 @@ class Isucon5::WebApp < Sinatra::Base
         reconnect: true,
       )
       client.query_options.merge!(symbolize_keys: true)
+
+      class << client
+        def hook(*args)
+          p args
+        end
+
+        # alias_method :original_query, :query
+        # def query(*args)
+        #   hook(*args)
+        #   original_query(*args)
+        # end
+
+        alias_method :original_xquery, :xquery
+        def xquery(*args)
+          hook(*args)
+          original_xquery(*args)
+        end
+      end
+
       Thread.current[:isucon5_db] = client
       client
     end
