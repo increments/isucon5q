@@ -183,11 +183,10 @@ SQL
       .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
 
     comments_for_me_query = <<SQL
-SELECT c.id AS id, c.entry_id AS entry_id, c.user_id AS user_id, c.comment AS comment, c.created_at AS created_at
-FROM comments c
-JOIN entries e ON c.entry_id = e.id
-WHERE e.user_id = ?
-ORDER BY c.created_at DESC
+SELECT id, entry_id, user_id, comment, created_at
+FROM comments
+WHERE entry_user_id = ?
+ORDER BY created_at DESC
 LIMIT 10
 SQL
     comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
@@ -332,8 +331,8 @@ SQL
     if entry[:is_private] && !permitted?(entry[:user_id])
       raise Isucon5::PermissionDenied
     end
-    query = 'INSERT INTO comments (entry_id, user_id, comment) VALUES (?,?,?)'
-    db.xquery(query, entry[:id], current_user[:id], params['comment'])
+    query = 'INSERT INTO comments (entry_id, user_id, comment, entry_user_id) VALUES (?,?,?,?)'
+    db.xquery(query, entry[:id], current_user[:id], params['comment'], entry[:user_id])
     redirect "/diary/entry/#{entry[:id]}"
   end
 
