@@ -19,6 +19,9 @@ end
 
 class Isucon5::WebApp < Sinatra::Base
   use Rack::Session::Cookie
+  file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
+  file.sync = true
+  use Rack::CommonLogger, file
   use Rack::MiniProfiler
   set :erb, escape_html: true
   set :public_folder, File.expand_path('../../static', __FILE__)
