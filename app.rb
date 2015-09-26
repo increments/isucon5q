@@ -230,10 +230,17 @@ class Isucon5::WebApp < Sinatra::Base
     end
 
     comments_of_friends_sql = <<-SQL
-      select *
-      from comments
+      select
+        comments.id as id,
+        comments.comment as comment,
+        comments.user_id as user_id,
+        comments.created_at as created_at,
+        users.nick_name as nick_name,
+        users.account_name as account_name
+      from comments, users
       where user_id in #{friend_ids_str}
-      order by created_at desc
+      and entry_user_id = users.id
+      order by comments.created_at desc
       limit 10
     SQL
     comments_of_friends = db.query(comments_of_friends_sql)
