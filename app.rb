@@ -106,10 +106,6 @@ class Isucon5::WebApp < Sinatra::Base
       !!db.xquery('SELECT 1 FROM relations WHERE one = ? AND another = ?', one, another).first
     end
 
-    def is_friend_account?(account_name)
-      is_friend?(user_from_account(account_name)[:id])
-    end
-
     def permitted?(another_id)
       another_id == current_user[:id] || is_friend?(another_id)
     end
@@ -424,11 +420,9 @@ class Isucon5::WebApp < Sinatra::Base
 
   post '/friends/:account_name' do
     authenticated!
-    unless is_friend_account?(params['account_name'])
-      user = user_from_account(params['account_name'])
-      unless user
-        raise Isucon5::ContentNotFound
-      end
+    user = user_from_account(params['account_name'])
+    raise Isucon5::ContentNotFound unless user
+    unless is_friend?(user[:id])
       user_id = current_user[:id]
       another_id = user[:id]
       one, another = user_id < another_id ? [another_id, user_id] : [user_id, another_id]
