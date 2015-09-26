@@ -6,3 +6,7 @@ if ['ISUCON_LOCAL']
 else
   pid "/home/isucon/webapp/ruby/unicorn.pid"
 end
+
+after_fork do |server, worker|
+  GC.disable
+end
