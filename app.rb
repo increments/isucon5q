@@ -188,8 +188,6 @@ class Isucon5::WebApp < Sinatra::Base
   get '/' do
     authenticated!
 
-    profile = db.xquery('SELECT * FROM profiles WHERE user_id = ?', current_user[:id]).first
-
     entries_query = 'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
     entries = db.xquery(entries_query, current_user[:id])
       .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
@@ -248,7 +246,6 @@ SQL
     footprints = db.query(footprints_sql)
 
     locals = {
-      profile: profile || {},
       entries: entries,
       comments_for_me: comments_for_me,
       entries_of_friends: entries_of_friends,
