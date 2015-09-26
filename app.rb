@@ -179,26 +179,46 @@ class Isucon5::WebApp < Sinatra::Base
     entries = db.xquery(entries_query, current_user[:id])
       .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
 
-    comments_for_me_query = <<SQL
-SELECT id, entry_id, user_id, comment, created_at
-FROM comments
-WHERE entry_user_id = ?
-ORDER BY created_at DESC
-LIMIT 10
-SQL
+    comments_for_me_query = <<-SQL
+      SELECT
+        users.account_name as account_name,
+        users.nick_name as nick_name,
+        comments.comment as comment,
+        comments.created_at as created_at
+      FROM comments, users
+      WHERE entry_user_id = ?
+      and comments.user_id = users.id
+      ORDER BY comments.created_at DESC
+      LIMIT 10
+    SQL
     comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
 
-    friend_ids =
-      db.query("select another as friend_id from relations where one = #{current_user[:id]}").to_a
-    friend_ids +=
-      db.query("select one as friend_id from relations where another = #{current_user[:id]}").to_a
-    friends_count = friend_ids.size
+    friends_hash = {}
+    another_frields_sql =<<-SQL
+      select users.*
+      from relations, users
+      where one = #{current_user[:id]}
+      and another = users.id
+    SQL
+    db.query(another_frields_sql).each do |record|
+      friends_hash[record[:id]] = record
+    end
+    one_frields_sql =<<-SQL
+      select users.*
+      from relations, users
+      where another = #{current_user[:id]}
+      and one = users.id
+    SQL
+    db.query(one_frields_sql).each do |record|
+      friends_hash[record[:id]] = record
+    end
+    friends_count = friends_hash.size
 
     # (1, 2, 3)
-    friend_ids_str = "(#{friend_ids.map{ |r| r[:friend_id] }.join(',')})"
+    friend_ids_str = "(#{friends_hash.keys.join(',')})"
 
     entries_of_friends_sql = <<-SQL
-      select *
+      select id, user_id, body, created_at
       from entries
       where user_id in #{friend_ids_str}
       order by created_at desc
@@ -210,13 +230,31 @@ SQL
     end
 
     comments_of_friends_sql = <<-SQL
-      select *
+      select
+        comments.id as id,
+        comments.comment as comment,
+        comments.user_id as user_id,
+        comments.created_at as created_at,
+        comments.entry_user_id as entry_user_id
       from comments
       where user_id in #{friend_ids_str}
-      order by created_at desc
+      order by comments.created_at desc
       limit 10
     SQL
     comments_of_friends = db.query(comments_of_friends_sql)
+
+    entry_owner_ids = comments_of_friends.map do |record|
+      record[:entry_user_id]
+    end.join(',')
+    entry_owners_sql =<<-SQL
+      select id, account_name, nick_name
+      from users
+      where id in (#{entry_owner_ids})
+    SQL
+    entry_owners_hash = {}
+    db.query(entry_owners_sql).each do |record|
+      entry_owners_hash[record[:id]] = record
+    end
 
     footprints_sql = <<-SQL
       SELECT users.account_name as account_name, users.nick_name as nick_name, new_footprints.created_at as created_at
@@ -236,8 +274,10 @@ SQL
       entries: entries,
       comments_for_me: comments_for_me,
       entries_of_friends: entries_of_friends,
+      entry_owners_hash: entry_owners_hash,
       comments_of_friends: comments_of_friends,
       friends_count: friends_count,
+      friends_hash: friends_hash,
       footprints: footprints
     }
     erb :index, locals: locals
@@ -304,7 +344,19 @@ SQL
     if entry[:is_private] && !permitted?(owner[:id])
       raise Isucon5::PermissionDenied
     end
-    comments = db.xquery('SELECT * FROM comments WHERE entry_id = ?', entry[:id])
+
+    comments_sql =<<-SQL
+      select
+        comments.comment as comment,
+        comments.created_at as created_at,
+        users.account_name as account_name,
+        users.nick_name as nick_name
+      from comments, users
+      where user_id = users.id
+      and entry_id = #{entry[:id]}
+    SQL
+    comments = db.query(comments_sql)
+
     mark_footprint(owner[:id])
     erb :entry, locals: { owner: owner, entry: entry, comments: comments }
   end
