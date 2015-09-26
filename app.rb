@@ -192,6 +192,12 @@ LIMIT 10
 SQL
     comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
 
+    friend_ids =
+      db.query("select another as friend_id from relations where one = #{current_user[:id]}").to_a
+    friend_ids +=
+      db.query("select one as friend_id from relations where another = #{current_user[:id]}").to_a
+    friends_count = friend_ids.size
+
     entries_of_friends = []
     db.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000').each do |entry|
       next unless is_friend?(entry[:user_id])
@@ -210,14 +216,6 @@ SQL
       break if comments_of_friends.size >= 10
     end
 
-    friends_query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
-    friends_map = {}
-    db.xquery(friends_query, current_user[:id], current_user[:id]).each do |rel|
-      key = (rel[:one] == current_user[:id] ? :another : :one)
-      friends_map[rel[key]] ||= rel[:created_at]
-    end
-    friends = friends_map.map{|user_id, created_at| [user_id, created_at]}
-
     query = <<SQL
 SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) AS updated
 FROM footprints
@@ -234,7 +232,7 @@ SQL
       comments_for_me: comments_for_me,
       entries_of_friends: entries_of_friends,
       comments_of_friends: comments_of_friends,
-      friends: friends,
+      friends_count: friends_count,
       footprints: footprints
     }
     erb :index, locals: locals
