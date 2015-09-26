@@ -277,23 +277,21 @@ SQL
     if params['account_name'] != current_user[:account_name]
       raise Isucon5::PermissionDenied
     end
-    args = [params['first_name'], params['last_name'], params['sex'], params['birthday'], params['pref']]
 
-    prof = db.xquery('SELECT * FROM profiles WHERE user_id = ?', current_user[:id]).first
-    if prof
-      query = <<SQL
-UPDATE profiles
-SET first_name=?, last_name=?, sex=?, birthday=?, pref=?, updated_at=CURRENT_TIMESTAMP()
-WHERE user_id = ?
-SQL
-      args << current_user[:id]
-    else
-      query = <<SQL
-INSERT INTO profiles (user_id,first_name,last_name,sex,birthday,pref) VALUES (?,?,?,?,?,?)
-SQL
-      args.unshift(current_user[:id])
-    end
-    db.xquery(query, *args)
+    query = <<-SQL
+      UPDATE users
+      SET first_name=?, last_name=?, sex=?, birthday=?, pref=?, updated_at=CURRENT_TIMESTAMP()
+      WHERE id = ?
+    SQL
+    db.xquery(
+      query,
+      params['first_name'],
+      params['last_name'],
+      params['sex'],
+      params['birthday'],
+      params['pref'],
+      current_user[:id]
+    )
     redirect "/profile/#{params['account_name']}"
   end
 
