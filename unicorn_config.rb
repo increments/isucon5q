@@ -1,6 +1,7 @@
 worker_processes 4
 preload_app true
-listen 80
+<<<<<<< HEAD
+listen '/tmp/unicorn.sock'
 if ['ISUCON_LOCAL']
   pid 'unicorn.pid'
 else
