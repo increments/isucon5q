@@ -213,15 +213,14 @@ SQL
       entry
     end
 
-    comments_of_friends = []
-    db.query('SELECT * FROM comments ORDER BY created_at DESC LIMIT 1000').each do |comment|
-      next unless is_friend?(comment[:user_id])
-      entry = db.xquery('SELECT * FROM entries WHERE id = ?', comment[:entry_id]).first
-      entry[:is_private] = (entry[:private] == 1)
-      next if entry[:is_private] && !permitted?(entry[:user_id])
-      comments_of_friends << comment
-      break if comments_of_friends.size >= 10
-    end
+    comments_of_friends_sql = <<-SQL
+      select *
+      from comments
+      where user_id in #{friend_ids_str}
+      order by created_at desc
+      limit 10
+    SQL
+    comments_of_friends = db.query(comments_of_friends_sql)
 
     query = <<SQL
 SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) AS updated
