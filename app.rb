@@ -17,6 +17,12 @@ module Isucon5
   ::Time.prepend TimeWithoutZone
 end
 
+module QueryLogger
+  def self.logger
+    @logger ||= ::Logger.new(__dir__ + '/log/query.log')
+  end
+end
+
 class Isucon5::WebApp < Sinatra::Base
   use Rack::Session::Cookie
 
@@ -37,6 +43,10 @@ class Isucon5::WebApp < Sinatra::Base
   #set :sessions, true
   set :session_secret, ENV['ISUCON5_SESSION_SECRET'] || 'beermoris'
   set :protection, true
+
+  before do
+    QueryLogger.logger << '=' * 80 + "\n"
+  end
 
   helpers do
     def config
@@ -65,7 +75,7 @@ class Isucon5::WebApp < Sinatra::Base
 
       class << client
         def hook(*args)
-          p args
+          QueryLogger.logger << args.inspect + "\n"
         end
 
         # alias_method :original_query, :query
