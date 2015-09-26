@@ -198,12 +198,19 @@ SQL
       db.query("select one as friend_id from relations where another = #{current_user[:id]}").to_a
     friends_count = friend_ids.size
 
-    entries_of_friends = []
-    db.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000').each do |entry|
-      next unless is_friend?(entry[:user_id])
+    # (1, 2, 3)
+    friend_ids_str = "(#{friend_ids.map{ |r| r[:friend_id] }.join(',')})"
+
+    entries_of_friends_sql = <<-SQL
+      select *
+      from entries
+      where user_id in #{friend_ids_str}
+      order by created_at desc
+      limit 10
+    SQL
+    entries_of_friends = db.query(entries_of_friends_sql).map do |entry|
       entry[:title] = entry[:body].split(/\n/).first
-      entries_of_friends << entry
-      break if entries_of_friends.size >= 10
+      entry
     end
 
     comments_of_friends = []
