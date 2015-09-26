@@ -332,7 +332,19 @@ class Isucon5::WebApp < Sinatra::Base
     if entry[:is_private] && !permitted?(owner[:id])
       raise Isucon5::PermissionDenied
     end
-    comments = db.xquery('SELECT * FROM comments WHERE entry_id = ?', entry[:id])
+
+    comments_sql =<<-SQL
+      select
+        comments.comment as comment,
+        comments.created_at as created_at,
+        users.account_name as account_name,
+        users.nick_name as nick_name
+      from comments, users
+      where user_id = users.id
+      and entry_id = #{entry[:id]}
+    SQL
+    comments = db.query(comments_sql)
+
     mark_footprint(owner[:id])
     erb :entry, locals: { owner: owner, entry: entry, comments: comments }
   end
