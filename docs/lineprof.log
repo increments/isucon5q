@@ -1,0 +1,1291 @@
+$ bundle exec unicorn -c unicorn_config.rb -p 8080
+I, [2015-09-26T13:07:28.038541 #5812]  INFO -- : Refreshing Gem list
+I, [2015-09-26T13:07:28.106773 #5812]  INFO -- : listening on addr=0.0.0.0:8080 fd=10
+I, [2015-09-26T13:07:28.107019 #5812]  INFO -- : worker=0 spawning...
+I, [2015-09-26T13:07:28.107980 #5812]  INFO -- : worker=1 spawning...
+I, [2015-09-26T13:07:28.108501 #5815]  INFO -- : worker=0 spawned pid=5815
+I, [2015-09-26T13:07:28.108717 #5812]  INFO -- : worker=2 spawning...
+I, [2015-09-26T13:07:28.109157 #5818]  INFO -- : worker=1 spawned pid=5818
+I, [2015-09-26T13:07:28.109462 #5812]  INFO -- : worker=3 spawning...
+I, [2015-09-26T13:07:28.109984 #5815]  INFO -- : worker=0 ready
+I, [2015-09-26T13:07:28.110016 #5821]  INFO -- : worker=2 spawned pid=5821
+I, [2015-09-26T13:07:28.110716 #5818]  INFO -- : worker=1 ready
+I, [2015-09-26T13:07:28.110830 #5812]  INFO -- : master process ready
+I, [2015-09-26T13:07:28.111212 #5824]  INFO -- : worker=3 spawned pid=5824
+I, [2015-09-26T13:07:28.111973 #5821]  INFO -- : worker=2 ready
+I, [2015-09-26T13:07:28.113159 #5824]  INFO -- : worker=3 ready
+        SECURITY WARNING: No secret option provided to Rack::Session::Cookie.
+        This poses a security threat. It is strongly recommended that you
+        provide a secret to prevent exploits that may be possible from crafted
+        cookies. This will not be supported in future versions of Rack, and
+        future versions will even invalidate your existing user cookies.
+
+        Called from: /home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/builder.rb:86:in `new'.
+/home/isucon/webapp/ruby/app.rb:367: warning: GC.stat keys were changed from Ruby 2.1. In this case, you refer to obsolete `total_allocated_object' (new key is `total_allocated_objects'). Please check <https://bugs.ruby-lang.org/issues/9924> for more information.
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  45      def db
+               |  46        return Thread.current[:isucon5_db] if Thread.current[:isucon5_db]
+   1.9ms     2 |  47        client = Mysql2::Client.new(
+               |  48          host: config[:db][:host],
+               |  49          port: config[:db][:port],
+              .......
+               |  366
+               |  367    get '/initialize' do
+  53.4ms     2 |  368      db.query("DELETE FROM relations WHERE id > 500000")
+  18.9ms     2 |  369      db.query("DELETE FROM footprints WHERE id > 500000")
+  72.7ms     2 |  370      db.query("DELETE FROM entries WHERE id > 500000")
+   8.8ms     2 |  371      db.query("DELETE FROM comments WHERE id > 1500000")
+               |  372    end
+               |  373  end
+
+127.0.0.1 - - [26/Sep/2015:13:08:39 +0900] "GET /initialize HTTP/1.0" 200 - 0.1758
+        SECURITY WARNING: No secret option provided to Rack::Session::Cookie.
+        This poses a security threat. It is strongly recommended that you
+        provide a secret to prevent exploits that may be possible from crafted
+        cookies. This will not be supported in future versions of Rack, and
+        future versions will even invalidate your existing user cookies.
+
+        Called from: /home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/builder.rb:86:in `new'.
+/home/isucon/webapp/ruby/app.rb:153: warning: GC.stat keys were changed from Ruby 2.1. In this case, you refer to obsolete `total_allocated_object' (new key is `total_allocated_objects'). Please check <https://bugs.ruby-lang.org/issues/9924> for more information.
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  153    get '/login' do
+               |  154      session.clear
+  17.4ms     1 |  155      erb :login, layout: false, locals: { message: '高負荷に耐えられるSNSコミュニティサイトへようこそ!' }
+               |  156    end
+               |  157
+
+127.0.0.1 - - [26/Sep/2015:13:08:39 +0900] "GET /login HTTP/1.0" 200 1021 0.0383
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  45      def db
+               |  46        return Thread.current[:isucon5_db] if Thread.current[:isucon5_db]
+   1.9ms     2 |  47        client = Mysql2::Client.new(
+               |  48          host: config[:db][:host],
+               |  49          port: config[:db][:port],
+              .......
+               |  65  WHERE u.email = ? AND u.passhash = SHA2(CONCAT(?, s.salt), 512)
+               |  66  SQL
+   2.7ms     4 |  67        result = db.xquery(query, email, password).first
+               |  68        unless result
+               |  69          raise Isucon5::AuthenticationError
+              .......
+               |  156    end
+               |  157
+   3.0ms     1 |  158    post '/login' do
+   2.8ms     1 |  159      authenticate params['email'], params['password']
+               |  160      redirect '/'
+               |  161    end
+
+127.0.0.1 - - [26/Sep/2015:13:08:39 +0900] "POST /login HTTP/1.0" 302 - 0.0370
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  153    get '/login' do
+               |  154      session.clear
+   0.6ms     1 |  155      erb :login, layout: false, locals: { message: '高負荷に耐えられるSNSコミュニティサイトへようこそ!' }
+               |  156    end
+               |  157
+
+127.0.0.1 - - [26/Sep/2015:13:08:39 +0900] "GET /login HTTP/1.0" 200 1021 0.0050
+        SECURITY WARNING: No secret option provided to Rack::Session::Cookie.
+        This poses a security threat. It is strongly recommended that you
+        provide a secret to prevent exploits that may be possible from crafted
+        cookies. This will not be supported in future versions of Rack, and
+        future versions will even invalidate your existing user cookies.
+
+        Called from: /home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/builder.rb:86:in `new'.
+/home/isucon/webapp/ruby/app.rb:158: warning: GC.stat keys were changed from Ruby 2.1. In this case, you refer to obsolete `total_allocated_object' (new key is `total_allocated_objects'). Please check <https://bugs.ruby-lang.org/issues/9924> for more information.
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  45      def db
+               |  46        return Thread.current[:isucon5_db] if Thread.current[:isucon5_db]
+   1.8ms     2 |  47        client = Mysql2::Client.new(
+               |  48          host: config[:db][:host],
+               |  49          port: config[:db][:port],
+              .......
+               |  65  WHERE u.email = ? AND u.passhash = SHA2(CONCAT(?, s.salt), 512)
+               |  66  SQL
+   2.4ms     4 |  67        result = db.xquery(query, email, password).first
+               |  68        unless result
+               |  69          raise Isucon5::AuthenticationError
+              .......
+               |  156    end
+               |  157
+   2.9ms     1 |  158    post '/login' do
+   2.6ms     1 |  159      authenticate params['email'], params['password']
+               |  160      redirect '/'
+               |  161    end
+
+127.0.0.1 - - [26/Sep/2015:13:08:39 +0900] "POST /login HTTP/1.0" 302 - 0.0226
+
+[Rack::Lineprof] ===============================================================
+
+
+127.0.0.1 - - [26/Sep/2015:13:08:39 +0900] "GET / HTTP/1.0" 302 - 0.0032
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  153    get '/login' do
+               |  154      session.clear
+   0.8ms     1 |  155      erb :login, layout: false, locals: { message: '高負荷に耐えられるSNSコミュニティサイトへようこそ!' }
+               |  156    end
+               |  157
+
+127.0.0.1 - - [26/Sep/2015:13:08:39 +0900] "GET /login HTTP/1.0" 200 1021 0.0070
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  65  WHERE u.email = ? AND u.passhash = SHA2(CONCAT(?, s.salt), 512)
+               |  66  SQL
+  32.8ms     4 |  67        result = db.xquery(query, email, password).first
+               |  68        unless result
+               |  69          raise Isucon5::AuthenticationError
+               |  70        end
+   0.2ms     2 |  71        session[:user_id] = result[:id]
+               |  72        result
+               |  73      end
+              .......
+               |  156    end
+               |  157
+  33.1ms     1 |  158    post '/login' do
+  33.0ms     1 |  159      authenticate params['email'], params['password']
+               |  160      redirect '/'
+               |  161    end
+
+127.0.0.1 - - [26/Sep/2015:13:08:39 +0900] "POST /login HTTP/1.0" 302 - 0.0375
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  12    module TimeWithoutZone
+               |  13      def to_s
+   0.3ms    80 |  14        strftime("%F %H:%M:%S")
+               |  15      end
+               |  16    end
+              .......
+               |  44
+               |  45      def db
+   3.3ms  6324 |  46        return Thread.current[:isucon5_db] if Thread.current[:isucon5_db]
+               |  47        client = Mysql2::Client.new(
+               |  48          host: config[:db][:host],
+              .......
+               |  78          return nil
+               |  79        end
+   0.3ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.5ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  94
+               |  95      def get_user(user_id)
+   7.7ms   200 |  96        user = db.xquery('SELECT * FROM users WHERE id = ?', user_id).first
+               |  97        raise Isucon5::ContentNotFound unless user
+               |  98        user
+              .......
+               |  106
+               |  107      def is_friend?(another_id)
+   7.8ms  3004 |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+ 355.3ms  6008 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+   0.8ms  1502 |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+               |  113
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.2ms     2 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  168
+               |  169    get '/' do
+   0.5ms     1 |  170      authenticated!
+               |  171
+  25.7ms     9 |  172      profile = db.xquery('SELECT * FROM profiles WHERE user_id = ?', current_user[:id]).first
+               |  173
+               |  174      entries_query = 'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
+ 262.7ms     3 |  175      entries = db.xquery(entries_query, current_user[:id])
+   0.4ms    22 |  176        .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+               |  177
+               |  178      comments_for_me_query = <<SQL
+              .......
+               |  184  LIMIT 10
+               |  185  SQL
+ 4241.4ms     3 |  186      comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
+               |  187
+               |  188      entries_of_friends = []
+ 279.3ms  1959 |  189      db.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000').each do |entry|
+ 151.6ms   652 |  190        next unless is_friend?(entry[:user_id])
+   0.4ms    20 |  191        entry[:title] = entry[:body].split(/\n/).first
+               |  192        entries_of_friends << entry
+               |  193        break if entries_of_friends.size >= 10
+              .......
+               |  195
+               |  196      comments_of_friends = []
+ 579.5ms  2550 |  197      db.query('SELECT * FROM comments ORDER BY created_at DESC LIMIT 1000').each do |comment|
+ 225.1ms   849 |  198        next unless is_friend?(comment[:user_id])
+ 303.4ms    77 |  199        entry = db.xquery('SELECT * FROM entries WHERE id = ?', comment[:entry_id]).first
+               |  200        entry[:is_private] = (entry[:private] == 1)
+   0.2ms     1 |  201        next if entry[:is_private] && !permitted?(entry[:user_id])
+               |  202        comments_of_friends << comment
+               |  203        break if comments_of_friends.size >= 10
+              .......
+               |  206      friends_query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
+               |  207      friends_map = {}
+  57.3ms   260 |  208      db.xquery(friends_query, current_user[:id], current_user[:id]).each do |rel|
+               |  209        key = (rel[:one] == current_user[:id] ? :another : :one)
+               |  210        friends_map[rel[key]] ||= rel[:created_at]
+              .......
+               |  220  LIMIT 10
+               |  221  SQL
+ 166.1ms     3 |  222      footprints = db.xquery(query, current_user[:id])
+               |  223
+               |  224      locals = {
+              .......
+               |  231        footprints: footprints
+               |  232      }
+  15.6ms     1 |  233      erb :index, locals: locals
+               |  234    end
+               |  235
+
+127.0.0.1 - - [26/Sep/2015:13:08:45 +0900] "GET / HTTP/1.0" 200 16246 5.6350
+
+[Rack::Lineprof] ===============================================================
+
+
+127.0.0.1 - - [26/Sep/2015:13:08:45 +0900] "GET /css/bootstrap.min.css HTTP/1.0" 200 122540 0.0454
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  12    module TimeWithoutZone
+               |  13      def to_s
+   0.4ms    80 |  14        strftime("%F %H:%M:%S")
+               |  15      end
+               |  16    end
+              .......
+               |  44
+               |  45      def db
+   1.8ms  3344 |  46        return Thread.current[:isucon5_db] if Thread.current[:isucon5_db]
+               |  47        client = Mysql2::Client.new(
+               |  48          host: config[:db][:host],
+              .......
+               |  78          return nil
+               |  79        end
+   0.5ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.7ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  94
+               |  95      def get_user(user_id)
+   9.2ms   200 |  96        user = db.xquery('SELECT * FROM users WHERE id = ?', user_id).first
+               |  97        raise Isucon5::ContentNotFound unless user
+               |  98        user
+              .......
+               |  106
+               |  107      def is_friend?(another_id)
+   4.2ms  1512 |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+ 156.9ms  3024 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+   0.4ms   756 |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+               |  113
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.4ms     4 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  168
+               |  169    get '/' do
+   0.7ms     1 |  170      authenticated!
+               |  171
+  19.8ms     9 |  172      profile = db.xquery('SELECT * FROM profiles WHERE user_id = ?', current_user[:id]).first
+               |  173
+               |  174      entries_query = 'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
+ 187.7ms     3 |  175      entries = db.xquery(entries_query, current_user[:id])
+   0.3ms    22 |  176        .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+               |  177
+               |  178      comments_for_me_query = <<SQL
+              .......
+               |  184  LIMIT 10
+               |  185  SQL
+ 4444.1ms     3 |  186      comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
+               |  187
+               |  188      entries_of_friends = []
+  83.2ms   783 |  189      db.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000').each do |entry|
+  56.2ms   260 |  190        next unless is_friend?(entry[:user_id])
+   0.4ms    20 |  191        entry[:title] = entry[:body].split(/\n/).first
+               |  192        entries_of_friends << entry
+               |  193        break if entries_of_friends.size >= 10
+              .......
+               |  195
+               |  196      comments_of_friends = []
+ 375.7ms  1485 |  197      db.query('SELECT * FROM comments ORDER BY created_at DESC LIMIT 1000').each do |comment|
+ 111.2ms   494 |  198        next unless is_friend?(comment[:user_id])
+ 246.5ms    84 |  199        entry = db.xquery('SELECT * FROM entries WHERE id = ?', comment[:entry_id]).first
+               |  200        entry[:is_private] = (entry[:private] == 1)
+   0.4ms     2 |  201        next if entry[:is_private] && !permitted?(entry[:user_id])
+               |  202        comments_of_friends << comment
+               |  203        break if comments_of_friends.size >= 10
+              .......
+               |  206      friends_query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
+               |  207      friends_map = {}
+  32.5ms   257 |  208      db.xquery(friends_query, current_user[:id], current_user[:id]).each do |rel|
+               |  209        key = (rel[:one] == current_user[:id] ? :another : :one)
+               |  210        friends_map[rel[key]] ||= rel[:created_at]
+              .......
+               |  220  LIMIT 10
+               |  221  SQL
+ 155.7ms     3 |  222      footprints = db.xquery(query, current_user[:id])
+               |  223
+               |  224      locals = {
+              .......
+               |  231        footprints: footprints
+               |  232      }
+  17.2ms     1 |  233      erb :index, locals: locals
+               |  234    end
+               |  235
+
+127.0.0.1 - - [26/Sep/2015:13:08:50 +0900] "GET / HTTP/1.0" 200 16378 5.3235
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  12    module TimeWithoutZone
+               |  13      def to_s
+   0.3ms    80 |  14        strftime("%F %H:%M:%S")
+               |  15      end
+               |  16    end
+              .......
+               |  44
+               |  45      def db
+   2.4ms  4780 |  46        return Thread.current[:isucon5_db] if Thread.current[:isucon5_db]
+               |  47        client = Mysql2::Client.new(
+               |  48          host: config[:db][:host],
+              .......
+               |  78          return nil
+               |  79        end
+   0.3ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.5ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  94
+               |  95      def get_user(user_id)
+   7.7ms   200 |  96        user = db.xquery('SELECT * FROM users WHERE id = ?', user_id).first
+               |  97        raise Isucon5::ContentNotFound unless user
+               |  98        user
+              .......
+               |  106
+               |  107      def is_friend?(another_id)
+   5.4ms  2234 |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+ 225.4ms  4468 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+   0.6ms  1117 |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+               |  113
+              .......
+               |  168
+               |  169    get '/' do
+   0.5ms     1 |  170      authenticated!
+               |  171
+   0.3ms     9 |  172      profile = db.xquery('SELECT * FROM profiles WHERE user_id = ?', current_user[:id]).first
+               |  173
+               |  174      entries_query = 'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
+ 211.1ms     3 |  175      entries = db.xquery(entries_query, current_user[:id])
+   0.2ms    22 |  176        .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+               |  177
+               |  178      comments_for_me_query = <<SQL
+              .......
+               |  184  LIMIT 10
+               |  185  SQL
+ 4077.4ms     3 |  186      comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
+               |  187
+               |  188      entries_of_friends = []
+ 163.0ms  1635 |  189      db.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000').each do |entry|
+ 120.7ms   544 |  190        next unless is_friend?(entry[:user_id])
+   0.4ms    20 |  191        entry[:title] = entry[:body].split(/\n/).first
+               |  192        entries_of_friends << entry
+               |  193        break if entries_of_friends.size >= 10
+              .......
+               |  195
+               |  196      comments_of_friends = []
+ 352.0ms  1722 |  197      db.query('SELECT * FROM comments ORDER BY created_at DESC LIMIT 1000').each do |comment|
+ 122.0ms   573 |  198        next unless is_friend?(comment[:user_id])
+ 211.3ms    70 |  199        entry = db.xquery('SELECT * FROM entries WHERE id = ?', comment[:entry_id]).first
+               |  200        entry[:is_private] = (entry[:private] == 1)
+               |  201        next if entry[:is_private] && !permitted?(entry[:user_id])
+              .......
+               |  206      friends_query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
+               |  207      friends_map = {}
+  83.3ms   323 |  208      db.xquery(friends_query, current_user[:id], current_user[:id]).each do |rel|
+               |  209        key = (rel[:one] == current_user[:id] ? :another : :one)
+               |  210        friends_map[rel[key]] ||= rel[:created_at]
+              .......
+               |  220  LIMIT 10
+               |  221  SQL
+ 158.9ms     3 |  222      footprints = db.xquery(query, current_user[:id])
+               |  223
+               |  224      locals = {
+              .......
+               |  231        footprints: footprints
+               |  232      }
+  15.2ms     1 |  233      erb :index, locals: locals
+               |  234    end
+               |  235
+
+127.0.0.1 - - [26/Sep/2015:13:08:55 +0900] "GET / HTTP/1.0" 200 16524 5.0682
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+   0.5ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.6ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  312    end
+               |  313
+  50.1ms     1 |  314    post '/diary/comment/:entry_id' do
+   0.6ms     1 |  315      authenticated!
+  32.5ms     7 |  316      entry = db.xquery('SELECT * FROM entries WHERE id = ?', params['entry_id']).first
+               |  317      unless entry
+               |  318        raise Isucon5::ContentNotFound
+              .......
+               |  323      end
+               |  324      query = 'INSERT INTO comments (entry_id, user_id, comment) VALUES (?,?,?)'
+  16.8ms     3 |  325      db.xquery(query, entry[:id], current_user[:id], params['comment'])
+               |  326      redirect "/diary/entry/#{entry[:id]}"
+               |  327    end
+
+127.0.0.1 - - [26/Sep/2015:13:08:55 +0900] "POST /diary/comment/2067 HTTP/1.0" 302 - 0.0575
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+   0.3ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.5ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  304    end
+               |  305
+  18.6ms     1 |  306    post '/diary/entry' do
+   0.5ms     1 |  307      authenticated!
+               |  308      query = 'INSERT INTO entries (user_id, private, body) VALUES (?,?,?)'
+               |  309      body = (params['title'] || "タイトルなし") + "\n" + params['content']
+  18.0ms     3 |  310      db.xquery(query, current_user[:id], (params['private'] ? '1' : '0'), body)
+               |  311      redirect "/diary/entries/#{current_user[:account_name]}"
+               |  312    end
+
+127.0.0.1 - - [26/Sep/2015:13:08:55 +0900] "POST /diary/entry HTTP/1.0" 302 - 0.0230
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+   0.3ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.4ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+   0.8ms    12 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+               |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.6ms     4 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  123        if user_id != current_user[:id]
+               |  124          query = 'INSERT INTO footprints (user_id,owner_id) VALUES (?,?)'
+   2.1ms     3 |  125          db.xquery(query, user_id, current_user[:id])
+               |  126        end
+               |  127      end
+              .......
+               |  235
+               |  236    get '/profile/:account_name' do
+   0.4ms     1 |  237      authenticated!
+               |  238      owner = user_from_account(params['account_name'])
+   0.3ms     8 |  239      prof = db.xquery('SELECT * FROM profiles WHERE user_id = ?', owner[:id]).first
+               |  240      prof = {} unless prof
+   0.3ms     1 |  241      query = if permitted?(owner[:id])
+               |  242                'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
+               |  243              else
+               |  244                'SELECT * FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at LIMIT 5'
+               |  245              end
+   0.4ms     2 |  246      entries = db.xquery(query, owner[:id])
+   0.2ms    22 |  247        .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+   2.1ms     1 |  248      mark_footprint(owner[:id])
+  16.0ms     2 |  249      erb :profile, locals: { owner: owner, profile: prof, entries: entries, private: permitted?(owner[:id]) }
+               |  250    end
+               |  251
+
+127.0.0.1 - - [26/Sep/2015:13:08:55 +0900] "GET /profile/lynn_roob1189 HTTP/1.0" 200 3339 0.0246
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+   0.3ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.4ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+   1.0ms    12 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+               |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.7ms     4 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  123        if user_id != current_user[:id]
+               |  124          query = 'INSERT INTO footprints (user_id,owner_id) VALUES (?,?)'
+   4.3ms     3 |  125          db.xquery(query, user_id, current_user[:id])
+               |  126        end
+               |  127      end
+              .......
+               |  235
+               |  236    get '/profile/:account_name' do
+   0.4ms     1 |  237      authenticated!
+               |  238      owner = user_from_account(params['account_name'])
+               |  239      prof = db.xquery('SELECT * FROM profiles WHERE user_id = ?', owner[:id]).first
+               |  240      prof = {} unless prof
+   0.3ms     1 |  241      query = if permitted?(owner[:id])
+               |  242                'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
+               |  243              else
+               |  244                'SELECT * FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at LIMIT 5'
+               |  245              end
+   0.3ms     2 |  246      entries = db.xquery(query, owner[:id])
+   0.2ms    22 |  247        .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+   4.3ms     1 |  248      mark_footprint(owner[:id])
+   3.3ms     2 |  249      erb :profile, locals: { owner: owner, profile: prof, entries: entries, private: permitted?(owner[:id]) }
+               |  250    end
+               |  251
+
+127.0.0.1 - - [26/Sep/2015:13:08:55 +0900] "GET /profile/lynn_roob1189 HTTP/1.0" 200 3308 0.0138
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+  41.8ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+  42.0ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  250    end
+               |  251
+  79.8ms     1 |  252    post '/profile/:account_name' do
+  42.0ms     1 |  253      authenticated!
+               |  254      if params['account_name'] != current_user[:account_name]
+               |  255        raise Isucon5::PermissionDenied
+              .......
+               |  257      args = [params['first_name'], params['last_name'], params['sex'], params['birthday'], params['pref']]
+               |  258
+   0.4ms     9 |  259      prof = db.xquery('SELECT * FROM profiles WHERE user_id = ?', current_user[:id]).first
+               |  260      if prof
+               |  261        query = <<SQL
+              .......
+               |  271        args.unshift(current_user[:id])
+               |  272      end
+  37.2ms     2 |  273      db.xquery(query, *args)
+               |  274      redirect "/profile/#{params['account_name']}"
+               |  275    end
+
+127.0.0.1 - - [26/Sep/2015:13:08:55 +0900] "POST /profile/lynn_roob1189 HTTP/1.0" 302 - 0.0851
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  12    module TimeWithoutZone
+               |  13      def to_s
+   0.4ms   100 |  14        strftime("%F %H:%M:%S")
+               |  15      end
+               |  16    end
+              .......
+               |  78          return nil
+               |  79        end
+   0.5ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.7ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  94
+               |  95      def get_user(user_id)
+  11.8ms   200 |  96        user = db.xquery('SELECT * FROM users WHERE id = ?', user_id).first
+               |  97        raise Isucon5::ContentNotFound unless user
+               |  98        user
+              .......
+               |  328
+               |  329    get '/footprints' do
+   0.7ms     1 |  330      authenticated!
+               |  331      query = <<SQL
+               |  332  SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) as updated
+              .......
+               |  337  LIMIT 50
+               |  338  SQL
+ 160.3ms     3 |  339      footprints = db.xquery(query, current_user[:id])
+  30.7ms     1 |  340      erb :footprints, locals: { footprints: footprints }
+               |  341    end
+               |  342
+
+127.0.0.1 - - [26/Sep/2015:13:08:57 +0900] "GET /footprints HTTP/1.0" 200 6725 0.1983
+        SECURITY WARNING: No secret option provided to Rack::Session::Cookie.
+        This poses a security threat. It is strongly recommended that you
+        provide a secret to prevent exploits that may be possible from crafted
+        cookies. This will not be supported in future versions of Rack, and
+        future versions will even invalidate your existing user cookies.
+
+        Called from: /home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/builder.rb:86:in `new'.
+/home/isucon/webapp/ruby/app.rb:169: warning: GC.stat keys were changed from Ruby 2.1. In this case, you refer to obsolete `total_allocated_object' (new key is `total_allocated_objects'). Please check <https://bugs.ruby-lang.org/issues/9924> for more information.
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  12    module TimeWithoutZone
+               |  13      def to_s
+   0.2ms    80 |  14        strftime("%F %H:%M:%S")
+               |  15      end
+               |  16    end
+              .......
+               |  44
+               |  45      def db
+   1.6ms  3190 |  46        return Thread.current[:isucon5_db] if Thread.current[:isucon5_db]
+   1.7ms     2 |  47        client = Mysql2::Client.new(
+               |  48          host: config[:db][:host],
+               |  49          port: config[:db][:port],
+              .......
+               |  78          return nil
+               |  79        end
+   2.1ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   2.3ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  94
+               |  95      def get_user(user_id)
+   8.1ms   200 |  96        user = db.xquery('SELECT * FROM users WHERE id = ?', user_id).first
+               |  97        raise Isucon5::ContentNotFound unless user
+               |  98        user
+              .......
+               |  106
+               |  107      def is_friend?(another_id)
+   3.7ms  1436 |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+ 152.2ms  2872 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+   0.4ms   718 |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+               |  113
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.5ms     4 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  168
+               |  169    get '/' do
+   2.3ms     1 |  170      authenticated!
+               |  171
+   0.3ms     9 |  172      profile = db.xquery('SELECT * FROM profiles WHERE user_id = ?', current_user[:id]).first
+               |  173
+               |  174      entries_query = 'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at LIMIT 5'
+   0.4ms     3 |  175      entries = db.xquery(entries_query, current_user[:id])
+   0.2ms    22 |  176        .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+               |  177
+               |  178      comments_for_me_query = <<SQL
+              .......
+               |  184  LIMIT 10
+               |  185  SQL
+   4.3ms     3 |  186      comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
+               |  187
+               |  188      entries_of_friends = []
+  77.2ms   720 |  189      db.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000').each do |entry|
+  52.7ms   239 |  190        next unless is_friend?(entry[:user_id])
+   0.4ms    20 |  191        entry[:title] = entry[:body].split(/\n/).first
+               |  192        entries_of_friends << entry
+               |  193        break if entries_of_friends.size >= 10
+              .......
+               |  195
+               |  196      comments_of_friends = []
+ 129.5ms  1434 |  197      db.query('SELECT * FROM comments ORDER BY created_at DESC LIMIT 1000').each do |comment|
+ 109.0ms   477 |  198        next unless is_friend?(comment[:user_id])
+   2.6ms    84 |  199        entry = db.xquery('SELECT * FROM entries WHERE id = ?', comment[:entry_id]).first
+               |  200        entry[:is_private] = (entry[:private] == 1)
+   0.5ms     2 |  201        next if entry[:is_private] && !permitted?(entry[:user_id])
+               |  202        comments_of_friends << comment
+               |  203        break if comments_of_friends.size >= 10
+              .......
+               |  206      friends_query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
+               |  207      friends_map = {}
+   2.6ms   257 |  208      db.xquery(friends_query, current_user[:id], current_user[:id]).each do |rel|
+               |  209        key = (rel[:one] == current_user[:id] ? :another : :one)
+               |  210        friends_map[rel[key]] ||= rel[:created_at]
+              .......
+               |  220  LIMIT 10
+               |  221  SQL
+ 158.1ms     3 |  222      footprints = db.xquery(query, current_user[:id])
+               |  223
+               |  224      locals = {
+              .......
+               |  231        footprints: footprints
+               |  232      }
+  15.9ms     1 |  233      erb :index, locals: locals
+               |  234    end
+               |  235
+
+127.0.0.1 - - [26/Sep/2015:13:08:57 +0900] "GET / HTTP/1.0" 200 16375 0.4097
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+   0.3ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.4ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+   0.3ms     4 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+               |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.3ms     2 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  123        if user_id != current_user[:id]
+               |  124          query = 'INSERT INTO footprints (user_id,owner_id) VALUES (?,?)'
+   2.5ms     3 |  125          db.xquery(query, user_id, current_user[:id])
+               |  126        end
+               |  127      end
+              .......
+               |  276
+               |  277    get '/diary/entries/:account_name' do
+   0.4ms     1 |  278      authenticated!
+               |  279      owner = user_from_account(params['account_name'])
+   0.3ms     1 |  280      query = if permitted?(owner[:id])
+               |  281                'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at DESC LIMIT 20'
+               |  282              else
+               |  283                'SELECT * FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at DESC LIMIT 20'
+               |  284              end
+ 408.2ms     2 |  285      entries = db.xquery(query, owner[:id])
+   0.9ms    82 |  286        .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+   2.5ms     1 |  287      mark_footprint(owner[:id])
+  16.7ms     2 |  288      erb :entries, locals: { owner: owner, entries: entries, myself: (current_user[:id] == owner[:id]) }
+               |  289    end
+               |  290
+
+127.0.0.1 - - [26/Sep/2015:13:08:57 +0900] "GET /diary/entries/lynn_roob1189 HTTP/1.0" 200 57311 0.4370
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+   0.3ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.4ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+   0.2ms     4 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+               |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.2ms     2 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  123        if user_id != current_user[:id]
+               |  124          query = 'INSERT INTO footprints (user_id,owner_id) VALUES (?,?)'
+   2.6ms     3 |  125          db.xquery(query, user_id, current_user[:id])
+               |  126        end
+               |  127      end
+              .......
+               |  290
+               |  291    get '/diary/entry/:entry_id' do
+   0.4ms     1 |  292      authenticated!
+   0.2ms     7 |  293      entry = db.xquery('SELECT * FROM entries WHERE id = ?', params['entry_id']).first
+               |  294      raise Isucon5::ContentNotFound unless entry
+               |  295      entry[:title], entry[:content] = entry[:body].split(/\n/, 2)
+               |  296      entry[:is_private] = (entry[:private] == 1)
+               |  297      owner = get_user(entry[:user_id])
+   0.2ms     1 |  298      if entry[:is_private] && !permitted?(owner[:id])
+               |  299        raise Isucon5::PermissionDenied
+               |  300      end
+               |  301      comments = db.xquery('SELECT * FROM comments WHERE entry_id = ?', entry[:id])
+   2.6ms     1 |  302      mark_footprint(owner[:id])
+  17.1ms     1 |  303      erb :entry, locals: { owner: owner, entry: entry, comments: comments }
+               |  304    end
+               |  305
+
+127.0.0.1 - - [26/Sep/2015:13:08:57 +0900] "GET /diary/entry/500078 HTTP/1.0" 200 1076 0.0258
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+   0.3ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.4ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+   0.3ms     4 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+               |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.4ms     2 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  123        if user_id != current_user[:id]
+               |  124          query = 'INSERT INTO footprints (user_id,owner_id) VALUES (?,?)'
+   2.4ms     3 |  125          db.xquery(query, user_id, current_user[:id])
+               |  126        end
+               |  127      end
+              .......
+               |  276
+               |  277    get '/diary/entries/:account_name' do
+   0.4ms     1 |  278      authenticated!
+               |  279      owner = user_from_account(params['account_name'])
+   0.4ms     1 |  280      query = if permitted?(owner[:id])
+               |  281                'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at DESC LIMIT 20'
+               |  282              else
+               |  283                'SELECT * FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at DESC LIMIT 20'
+               |  284              end
+  26.6ms     2 |  285      entries = db.xquery(query, owner[:id])
+   0.8ms    82 |  286        .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+   2.4ms     1 |  287      mark_footprint(owner[:id])
+   8.8ms     2 |  288      erb :entries, locals: { owner: owner, entries: entries, myself: (current_user[:id] == owner[:id]) }
+               |  289    end
+               |  290
+
+127.0.0.1 - - [26/Sep/2015:13:08:57 +0900] "GET /diary/entries/lynn_roob1189 HTTP/1.0" 200 60307 0.0468
+2015-09-26 13:08:58 - Isucon5::PermissionDenied - Isucon5::PermissionDenied:
+	/home/isucon/webapp/ruby/app.rb:299:in `block in <class:WebApp>'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1610:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1610:in `block in compile!'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:974:in `[]'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:974:in `block (3 levels) in route!'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:993:in `route_eval'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:974:in `block (2 levels) in route!'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1014:in `block in process_route'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1012:in `catch'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1012:in `process_route'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:972:in `block in route!'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:971:in `each'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:971:in `route!'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1084:in `block in dispatch!'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1066:in `block in invoke'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1066:in `catch'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1066:in `invoke'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1081:in `dispatch!'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:906:in `block in call!'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1066:in `block in invoke'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1066:in `catch'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1066:in `invoke'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:906:in `call!'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:894:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-lineprof-0.0.3/lib/rack/lineprof.rb:28:in `block in call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-lineprof-0.0.3/lib/rack/lineprof.rb:28:in `lineprof'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-lineprof-0.0.3/lib/rack/lineprof.rb:28:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/commonlogger.rb:33:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:218:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/session/abstract/id.rb:225:in `context'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/session/abstract/id.rb:220:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-protection-1.5.3/lib/rack/protection/xss_header.rb:18:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-protection-1.5.3/lib/rack/protection/path_traversal.rb:16:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-protection-1.5.3/lib/rack/protection/json_csrf.rb:18:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-protection-1.5.3/lib/rack/protection/base.rb:49:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-protection-1.5.3/lib/rack/protection/base.rb:49:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-protection-1.5.3/lib/rack/protection/frame_options.rb:31:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/nulllogger.rb:9:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/head.rb:13:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/show_exceptions.rb:21:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:181:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:2021:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1486:in `block in call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1795:in `synchronize'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:1486:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/tempfile_reaper.rb:15:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/lint.rb:49:in `_call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/lint.rb:37:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/showexceptions.rb:24:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/commonlogger.rb:33:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/sinatra-1.4.6/lib/sinatra/base.rb:218:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/chunked.rb:54:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/rack-1.6.4/lib/rack/content_length.rb:15:in `call'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/unicorn-4.9.0/lib/unicorn/http_server.rb:580:in `process_client'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/unicorn-4.9.0/lib/unicorn/http_server.rb:674:in `worker_loop'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/unicorn-4.9.0/lib/unicorn/http_server.rb:529:in `spawn_missing_workers'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/unicorn-4.9.0/lib/unicorn/http_server.rb:140:in `start'
+	/home/isucon/.local/ruby/lib/ruby/gems/2.2.0/gems/unicorn-4.9.0/bin/unicorn:126:in `<top (required)>'
+	/home/isucon/.local/ruby/bin/unicorn:23:in `load'
+	/home/isucon/.local/ruby/bin/unicorn:23:in `<main>'
+127.0.0.1 - - [26/Sep/2015:13:08:58 +0900] "GET /diary/entry/500078 HTTP/1.0" 500 171260 0.0521
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  12    module TimeWithoutZone
+               |  13      def to_s
+   0.4ms   170 |  14        strftime("%F %H:%M:%S")
+               |  15      end
+               |  16    end
+              .......
+               |  78          return nil
+               |  79        end
+   0.4ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.6ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  94
+               |  95      def get_user(user_id)
+  12.9ms   340 |  96        user = db.xquery('SELECT * FROM users WHERE id = ?', user_id).first
+               |  97        raise Isucon5::ContentNotFound unless user
+               |  98        user
+              .......
+               |  342
+               |  343    get '/friends' do
+   0.6ms     1 |  344      authenticated!
+               |  345      query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
+               |  346      friends = {}
+   2.6ms   260 |  347      db.xquery(query, current_user[:id], current_user[:id]).each do |rel|
+               |  348        key = (rel[:one] == current_user[:id] ? :another : :one)
+               |  349        friends[rel[key]] ||= rel[:created_at]
+               |  350      end
+               |  351      list = friends.map{|user_id, created_at| [user_id, created_at]}
+  17.2ms     1 |  352      erb :friends, locals: { friends: list }
+               |  353    end
+               |  354
+
+127.0.0.1 - - [26/Sep/2015:13:08:58 +0900] "GET /friends HTTP/1.0" 200 11573 0.0255
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+   0.3ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.5ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  100
+               |  101      def user_from_account(account_name)
+   0.4ms     8 |  102        user = db.xquery('SELECT * FROM users WHERE account_name = ?', account_name).first
+               |  103        raise Isucon5::ContentNotFound unless user
+               |  104        user
+              .......
+               |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+   0.3ms     4 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+               |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+               |  113
+               |  114      def is_friend_account?(account_name)
+   0.5ms     2 |  115        is_friend?(user_from_account(account_name)[:id])
+               |  116      end
+               |  117
+              .......
+               |  353    end
+               |  354
+   4.8ms     1 |  355    post '/friends/:account_name' do
+   0.5ms     1 |  356      authenticated!
+   0.5ms     1 |  357      unless is_friend_account?(params['account_name'])
+   0.2ms     1 |  358        user = user_from_account(params['account_name'])
+               |  359        unless user
+               |  360          raise Isucon5::ContentNotFound
+               |  361        end
+   3.3ms     4 |  362        db.xquery('INSERT INTO relations (one, another) VALUES (?,?), (?,?)', current_user[:id], user[:id], user[:id], current_user[:id])
+   0.3ms     1 |  363        redirect '/friends'
+               |  364      end
+               |  365    end
+
+127.0.0.1 - - [26/Sep/2015:13:08:58 +0900] "POST /friends/arnaldo_murazik3328 HTTP/1.0" 302 - 0.0106
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  12    module TimeWithoutZone
+               |  13      def to_s
+   0.7ms   172 |  14        strftime("%F %H:%M:%S")
+               |  15      end
+               |  16    end
+              .......
+               |  44
+               |  45      def db
+   0.3ms   352 |  46        return Thread.current[:isucon5_db] if Thread.current[:isucon5_db]
+               |  47        client = Mysql2::Client.new(
+               |  48          host: config[:db][:host],
+              .......
+               |  78          return nil
+               |  79        end
+   0.5ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.6ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  94
+               |  95      def get_user(user_id)
+  18.2ms   344 |  96        user = db.xquery('SELECT * FROM users WHERE id = ?', user_id).first
+               |  97        raise Isucon5::ContentNotFound unless user
+               |  98        user
+              .......
+               |  342
+               |  343    get '/friends' do
+   0.6ms     1 |  344      authenticated!
+               |  345      query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
+               |  346      friends = {}
+   2.8ms   266 |  347      db.xquery(query, current_user[:id], current_user[:id]).each do |rel|
+               |  348        key = (rel[:one] == current_user[:id] ? :another : :one)
+               |  349        friends[rel[key]] ||= rel[:created_at]
+               |  350      end
+               |  351      list = friends.map{|user_id, created_at| [user_id, created_at]}
+  22.3ms     1 |  352      erb :friends, locals: { friends: list }
+               |  353    end
+               |  354
+
+127.0.0.1 - - [26/Sep/2015:13:08:59 +0900] "GET /friends HTTP/1.0" 200 11712 0.0328
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  12    module TimeWithoutZone
+               |  13      def to_s
+   0.2ms    40 |  14        strftime("%F %H:%M:%S")
+               |  15      end
+               |  16    end
+              .......
+               |  78          return nil
+               |  79        end
+   0.2ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.3ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  100
+               |  101      def user_from_account(account_name)
+   0.4ms     4 |  102        user = db.xquery('SELECT * FROM users WHERE account_name = ?', account_name).first
+               |  103        raise Isucon5::ContentNotFound unless user
+               |  104        user
+              .......
+               |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+   0.4ms     4 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+               |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.4ms     2 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  123        if user_id != current_user[:id]
+               |  124          query = 'INSERT INTO footprints (user_id,owner_id) VALUES (?,?)'
+   2.6ms     3 |  125          db.xquery(query, user_id, current_user[:id])
+               |  126        end
+               |  127      end
+              .......
+               |  276
+               |  277    get '/diary/entries/:account_name' do
+   0.3ms     1 |  278      authenticated!
+   0.4ms     1 |  279      owner = user_from_account(params['account_name'])
+   0.4ms     1 |  280      query = if permitted?(owner[:id])
+               |  281                'SELECT * FROM entries WHERE user_id = ? ORDER BY created_at DESC LIMIT 20'
+               |  282              else
+               |  283                'SELECT * FROM entries WHERE user_id = ? AND private=0 ORDER BY created_at DESC LIMIT 20'
+               |  284              end
+   0.8ms     2 |  285      entries = db.xquery(query, owner[:id])
+   0.7ms    82 |  286        .map{ |entry| entry[:is_private] = (entry[:private] == 1); entry[:title], entry[:content] = entry[:body].split(/\n/, 2); entry }
+   2.6ms     1 |  287      mark_footprint(owner[:id])
+  10.1ms     2 |  288      erb :entries, locals: { owner: owner, entries: entries, myself: (current_user[:id] == owner[:id]) }
+               |  289    end
+               |  290
+
+127.0.0.1 - - [26/Sep/2015:13:08:59 +0900] "GET /diary/entries/lynn_roob1189 HTTP/1.0" 200 57311 0.0219
+
+[Rack::Lineprof] ===============================================================
+
+app.rb
+               |  78          return nil
+               |  79        end
+   0.4ms     6 |  80        @user = db.xquery('SELECT id, account_name, nick_name, email FROM users WHERE id=?', session[:user_id]).first
+               |  81        unless @user
+               |  82          session[:user_id] = nil
+              .......
+               |  88
+               |  89      def authenticated!
+   0.5ms     1 |  90        unless current_user
+               |  91          redirect '/login'
+               |  92        end
+              .......
+               |  108        user_id = session[:user_id]
+               |  109        query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
+   0.3ms     4 |  110        cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
+               |  111        cnt.to_i > 0 ? true : false
+               |  112      end
+              .......
+               |  117
+               |  118      def permitted?(another_id)
+   0.3ms     2 |  119        another_id == current_user[:id] || is_friend?(another_id)
+               |  120      end
+               |  121
+              .......
+               |  123        if user_id != current_user[:id]
+               |  124          query = 'INSERT INTO footprints (user_id,owner_id) VALUES (?,?)'
+   2.3ms     3 |  125          db.xquery(query, user_id, current_user[:id])
+               |  126        end
+               |  127      end
+              .......
+               |  290
+               |  291    get '/diary/entry/:entry_id' do
+   0.5ms     1 |  292      authenticated!
+               |  293      entry = db.xquery('SELECT * FROM entries WHERE id = ?', params['entry_id']).first
+               |  294      raise Isucon5::ContentNotFound unless entry
+              .......
+               |  296      entry[:is_private] = (entry[:private] == 1)
+               |  297      owner = get_user(entry[:user_id])
+   0.3ms     1 |  298      if entry[:is_private] && !permitted?(owner[:id])
+               |  299        raise Isucon5::PermissionDenied
+               |  300      end
+               |  301      comments = db.xquery('SELECT * FROM comments WHERE entry_id = ?', entry[:id])
+   2.3ms     1 |  302      mark_footprint(owner[:id])
+   1.9ms     1 |  303      erb :entry, locals: { owner: owner, entry: entry, comments: comments }
+               |  304    end
+               |  305
+
+127.0.0.1 - - [26/Sep/2015:13:08:59 +0900] "GET /diary/entry/500078 HTTP/1.0" 200 1076 0.0127
