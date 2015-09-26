@@ -22,9 +22,7 @@
   <div class="panel panel-primary entry">
     <div class="entry-title">タイトル: <a href="/diary/entry/<%= entry[:id] %>"><%= entry[:title] %></a></div>
     <div class="entry-content">
-      <% entry[:content][0..60].split(/\n/).each do |line| %>
-      <%= line %><br />
-      <% end %>
+      <%= entry[:content][0..60].gsub("\n", '<br />') %>
     </div>
     <div class="entry-created-at">更新日時: <%= entry[:created_at] %></div>
   </div>
@@ -67,5 +65,3 @@
   </form>
 </div>
 <% end %>
-
-
