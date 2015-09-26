@@ -113,9 +113,9 @@ SQL
 
     def is_friend?(another_id)
       user_id = session[:user_id]
-      query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)'
-      cnt = db.xquery(query, user_id, another_id, another_id, user_id).first[:cnt]
-      cnt.to_i > 0 ? true : false
+      return false if user_id == another_id
+      one, another = user_id < another_id ? [another_id, user_id] : [user_id, another_id]
+      !!db.xquery('SELECT 1 FROM relations WHERE one = ? AND another = ?', one, another).first
     end
 
     def is_friend_account?(account_name)
@@ -192,31 +192,35 @@ LIMIT 10
 SQL
     comments_for_me = db.xquery(comments_for_me_query, current_user[:id])
 
-    entries_of_friends = []
-    db.query('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000').each do |entry|
-      next unless is_friend?(entry[:user_id])
+    friend_ids =
+      db.query("select another as friend_id from relations where one = #{current_user[:id]}").to_a
+    friend_ids +=
+      db.query("select one as friend_id from relations where another = #{current_user[:id]}").to_a
+    friends_count = friend_ids.size
+
+    # (1, 2, 3)
+    friend_ids_str = "(#{friend_ids.map{ |r| r[:friend_id] }.join(',')})"
+
+    entries_of_friends_sql = <<-SQL
+      select *
+      from entries
+      where user_id in #{friend_ids_str}
+      order by created_at desc
+      limit 10
+    SQL
+    entries_of_friends = db.query(entries_of_friends_sql).map do |entry|
       entry[:title] = entry[:body].split(/\n/).first
-      entries_of_friends << entry
-      break if entries_of_friends.size >= 10
+      entry
     end
 
-    comments_of_friends = []
-    db.query('SELECT * FROM comments ORDER BY created_at DESC LIMIT 1000').each do |comment|
-      next unless is_friend?(comment[:user_id])
-      entry = db.xquery('SELECT * FROM entries WHERE id = ?', comment[:entry_id]).first
-      entry[:is_private] = (entry[:private] == 1)
-      next if entry[:is_private] && !permitted?(entry[:user_id])
-      comments_of_friends << comment
-      break if comments_of_friends.size >= 10
-    end
-
-    friends_query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
-    friends_map = {}
-    db.xquery(friends_query, current_user[:id], current_user[:id]).each do |rel|
-      key = (rel[:one] == current_user[:id] ? :another : :one)
-      friends_map[rel[key]] ||= rel[:created_at]
-    end
-    friends = friends_map.map{|user_id, created_at| [user_id, created_at]}
+    comments_of_friends_sql = <<-SQL
+      select *
+      from comments
+      where user_id in #{friend_ids_str}
+      order by created_at desc
+      limit 10
+    SQL
+    comments_of_friends = db.query(comments_of_friends_sql)
 
     query = <<SQL
 SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) AS updated
@@ -234,7 +238,7 @@ SQL
       comments_for_me: comments_for_me,
       entries_of_friends: entries_of_friends,
       comments_of_friends: comments_of_friends,
-      friends: friends,
+      friends_count: friends_count,
       footprints: footprints
     }
     erb :index, locals: locals
@@ -314,7 +318,7 @@ SQL
     authenticated!
     query = 'INSERT INTO entries (user_id, private, body) VALUES (?,?,?)'
     body = (params['title'] || "タイトルなし") + "\n" + params['content']
-    db.xquery(query, current_user[:id], (params['private'] ? '1' : '0'), body)
+    db.xquery(query, current_user[:id], (params['private'] ? 1 : 0), body)
     redirect "/diary/entries/#{current_user[:account_name]}"
   end
 
@@ -349,14 +353,23 @@ SQL
 
   get '/friends' do
     authenticated!
-    query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC'
-    friends = {}
-    db.xquery(query, current_user[:id], current_user[:id]).each do |rel|
-      key = (rel[:one] == current_user[:id] ? :another : :one)
-      friends[rel[key]] ||= rel[:created_at]
+
+
+    friends = db.query("select another as user_id, created_at from relations where one = #{current_user[:id]}").map do |record|
+      [record[:user_id], record[:created_at]]
     end
-    list = friends.map{|user_id, created_at| [user_id, created_at]}
-    erb :friends, locals: { friends: list }
+    friends += db.query("select one as user_id, created_at from relations where another = #{current_user[:id]}").map do |record|
+      [record[:user_id], record[:created_at]]
+    end
+    friends_list = friends.sort_by(&:last).reverse
+
+    user_ids = friends.map(&:first)
+    users = {}
+    db.query("select id, account_name, nick_name from users where id in (#{user_ids.join(',')})").each do |record|
+      users[record[:id]] = { account_name: record[:account_name], nick_name: record[:nick_name] }
+    end
+
+    erb :friends, locals: { friends_list: friends_list, users: users }
   end
 
   post '/friends/:account_name' do
@@ -366,7 +379,10 @@ SQL
       unless user
         raise Isucon5::ContentNotFound
       end
-      db.xquery('INSERT INTO relations (one, another) VALUES (?,?), (?,?)', current_user[:id], user[:id], user[:id], current_user[:id])
+      user_id = current_user[:id]
+      another_id = user[:id]
+      one, another = user_id < another_id ? [another_id, user_id] : [user_id, another_id]
+      db.query("INSERT INTO relations (one, another) VALUES (#{one},#{another})")
       redirect '/friends'
     end
   end
