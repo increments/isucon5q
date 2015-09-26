@@ -83,6 +83,7 @@ SQL
         session.clear
         raise Isucon5::AuthenticationError
       end
+      Rack::MiniProfiler.authorize_request
       @user
     end
 
