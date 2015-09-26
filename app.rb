@@ -131,16 +131,16 @@ SQL
 
       check_sql = <<-SQL
         select 1
-        from footprints
+        from new_footprints
         where user_id = #{user_id}
         and owner_id = #{current_user[:id]}
         and date(created_at) = date(now())
         limit 1
       SQL
       if db.query(check_sql).first
-        db.query("update footprints set created_at = now() where user_id = #{user_id} and owner_id = #{current_user[:id]}")
+        db.query("update new_footprints set created_at = now() where user_id = #{user_id} and owner_id = #{current_user[:id]}")
       else
-        db.query("INSERT INTO footprints (user_id,owner_id) VALUES (#{user_id},#{current_user[:id]})")
+        db.query("INSERT INTO new_footprints (user_id,owner_id) VALUES (#{user_id},#{current_user[:id]})")
       end
     end
 
@@ -234,15 +234,15 @@ SQL
     comments_of_friends = db.query(comments_of_friends_sql)
 
     footprints_sql = <<-SQL
-      SELECT users.account_name as account_name, users.nick_name as nick_name, footprints.created_at as created_at
+      SELECT users.account_name as account_name, users.nick_name as nick_name, new_footprints.created_at as created_at
       FROM
-        footprints,
+        new_footprints,
         users
       WHERE
         user_id = #{current_user[:id]}
       AND
         users.id = owner_id
-      ORDER BY footprints.created_at DESC
+      ORDER BY new_footprints.created_at DESC
       LIMIT 10
     SQL
     footprints = db.query(footprints_sql)
@@ -355,15 +355,15 @@ SQL
   get '/footprints' do
     authenticated!
     footprints_sql = <<-SQL
-      SELECT users.account_name as account_name, users.nick_name as nick_name, footprints.created_at as created_at
+      SELECT users.account_name as account_name, users.nick_name as nick_name, new_footprints.created_at as created_at
       FROM
-        footprints,
+        new_footprints,
         users
       WHERE
         user_id = #{current_user[:id]}
       AND
         users.id = owner_id
-      ORDER BY footprints.created_at DESC
+      ORDER BY new_footprints.created_at DESC
       LIMIT 10
     SQL
     footprints = db.query(footprints_sql)
@@ -372,7 +372,6 @@ SQL
 
   get '/friends' do
     authenticated!
-
 
     friends = db.query("select another as user_id, created_at from relations where one = #{current_user[:id]}").map do |record|
       [record[:user_id], record[:created_at]]
@@ -408,7 +407,7 @@ SQL
 
   get '/initialize' do
     db.query("DELETE FROM relations WHERE id > 500000")
-    db.query("DELETE FROM footprints WHERE id > 500000")
+    db.query("DELETE FROM new_footprints WHERE id > 500000")
     db.query("DELETE FROM entries WHERE id > 500000")
     db.query("DELETE FROM comments WHERE id > 1500000")
   end
