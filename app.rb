@@ -19,10 +19,17 @@ end
 
 class Isucon5::WebApp < Sinatra::Base
   use Rack::Session::Cookie
-  file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
-  file.sync = true
-  use Rack::CommonLogger, file
+
+  access_log = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
+  access_log.sync = true
+  use Rack::CommonLogger, access_log
+
+  error_log = File.new("#{settings.root}/log/error-#{settings.environment}.log", 'a+')
+  error_log.sync = true
+  before { env["rack.errors"] =  error_log }
+
   use Rack::Lineprof, profile: 'app.rb' if ENV['PROFILE']
+
   set :erb, escape_html: true
   set :public_folder, File.expand_path('../../static', __FILE__)
   #set :sessions, true
