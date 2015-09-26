@@ -233,15 +233,19 @@ SQL
     SQL
     comments_of_friends = db.query(comments_of_friends_sql)
 
-    query = <<SQL
-SELECT user_id, owner_id, DATE(created_at) AS date, MAX(created_at) AS updated
-FROM footprints
-WHERE user_id = ?
-GROUP BY user_id, owner_id, DATE(created_at)
-ORDER BY updated DESC
-LIMIT 10
-SQL
-    footprints = db.xquery(query, current_user[:id])
+    footprints_sql = <<-SQL
+      SELECT users.account_name as account_name, users.nick_name as nick_name, footprints.created_at as created_at
+      FROM
+        footprints,
+        users
+      WHERE
+        user_id = #{current_user[:id]}
+      AND
+        users.id = owner_id
+      ORDER BY footprints.created_at DESC
+      LIMIT 10
+    SQL
+    footprints = db.query(footprints_sql)
 
     locals = {
       profile: profile || {},
