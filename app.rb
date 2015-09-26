@@ -67,12 +67,11 @@ class Isucon5::WebApp < Sinatra::Base
     end
 
     def authenticate(email, password)
-      query = <<SQL
-SELECT u.id AS id, u.account_name AS account_name, u.nick_name AS nick_name, u.email AS email
-FROM users u
-JOIN salts s ON u.id = s.user_id
-WHERE u.email = ? AND u.passhash = SHA2(CONCAT(?, s.salt), 512)
-SQL
+      query = <<-SQL
+        SELECT id
+        FROM users
+        WHERE email = ? AND passhash = SHA2(CONCAT(?, salt), 512)
+      SQL
       result = db.xquery(query, email, password).first
       unless result
         raise Isucon5::AuthenticationError
