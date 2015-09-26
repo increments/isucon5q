@@ -3,7 +3,7 @@ require 'mysql2'
 require 'mysql2-cs-bind'
 require 'tilt/erubis'
 require 'erubis'
-require 'rack-mini-profiler'
+require 'rack-lineprof'
 
 module Isucon5
   class AuthenticationError < StandardError; end
@@ -22,7 +22,7 @@ class Isucon5::WebApp < Sinatra::Base
   file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
   file.sync = true
   use Rack::CommonLogger, file
-  use Rack::MiniProfiler
+  use Rack::Lineprof, profile: 'app.rb'
   set :erb, escape_html: true
   set :public_folder, File.expand_path('../../static', __FILE__)
   #set :sessions, true
@@ -83,7 +83,6 @@ SQL
         session.clear
         raise Isucon5::AuthenticationError
       end
-      Rack::MiniProfiler.authorize_request
       @user
     end
 
